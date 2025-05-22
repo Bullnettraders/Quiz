@@ -58,8 +58,7 @@ quiz_medium = [
     {"question": "Was bedeutet \"Overbought\" im RSI?", "options": ["A) Überverkauft", "B) Stark gestiegener Kurs, mögliches Verkaufssignal", "C) Tradingpause", "D) Signal zum Kaufen"], "answer": "B"},
     {"question": "Was ist eine Korrektur?", "options": ["A) Trendwende", "B) Rücksetzer im laufenden Trend", "C) Long-Einstieg", "D) Short-Auslösung"], "answer": "B"},
     {"question": "Was ist ein Pullback?", "options": ["A) Trendstart", "B) Rücklauf nach Ausbruch", "C) Verlustzone", "D) Hebelverlust"], "answer": "B"}
-], "answer": "B"},
-    ...
+]
 ]
 
 quiz_hard = [
