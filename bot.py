@@ -13,8 +13,22 @@ user_scores = {}
 active_questions = {}
 greeted_users = set()
 
-# (Fragen bleiben wie in deinem aktuellen Code bestehen)
-# ... quiz_easy, quiz_medium, quiz_hard ...
+# Fragenpools
+quiz_easy = [
+    {"question": "Was ist ein 'Stop-Loss'?", "options": ["A) Gewinnziel", "B) Verlustbegrenzung", "C) Ordertyp", "D) Candlestick"], "answer": "B"},
+    {"question": "Was zeigt ein grüner Candlestick?", "options": ["A) Kurs fällt", "B) Markt ist offen", "C) Kurs steigt", "D) Keine Aussage"], "answer": "C"},
+    ... (weitere Fragen wie bereits vorhanden)
+]
+
+quiz_medium = [
+    {"question": "Was ist der RSI?", "options": ["A) Indikator für Volumen", "B) Relative Strength Index", "C) Risikokonto", "D) Fundamentalanalyse"], "answer": "B"},
+    ...
+]
+
+quiz_hard = [
+    {"question": "Was ist ein Drawdown?", "options": ["A) Maximaler Gewinn", "B) Rückgang vom Hoch zum Tief", "C) Hebelverlust", "D) Seitwärtsphase"], "answer": "B"},
+    ...
+]
 
 @bot.command()
 async def start(ctx):
@@ -29,13 +43,13 @@ async def start(ctx):
 
 @bot.command()
 async def quiz(ctx, stufe: str):
-    stufe = stufe.lower()
     difficulty_map = {
         "leicht": (quiz_easy, 1),
         "mittel": (quiz_medium, 2),
         "schwer": (quiz_hard, 3)
     }
 
+    stufe = stufe.lower()
     if stufe not in difficulty_map:
         await ctx.send("Verwende bitte: `!quiz leicht`, `!quiz mittel` oder `!quiz schwer`")
         return
