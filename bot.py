@@ -82,8 +82,6 @@ quiz_hard = [
     {"question": "Was ist ein Gap Fill?", "options": ["A) Ausfüllen von Kurslücken", "B) Chartmuster", "C) Verlust", "D) Indikator"], "answer": "A"},
     {"question": "Was bedeutet \"Risk per Trade\"?", "options": ["A) Gewinnziel", "B) Kapitalrisiko je Trade", "C) Ordergröße", "D) Brokerkosten"], "answer": "B"},
     {"question": "Was ist ein Portfolio Drawdown?", "options": ["A) Gewinn", "B) Gesamtverlust bezogen auf das Depot", "C) Ein Trade", "D) Margin-Handel"], "answer": "B"}
-], "answer": "B"},
-    ...
 ]
 
 @bot.command()
