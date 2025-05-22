@@ -121,6 +121,9 @@ async def on_message(message):
         frage, punkte = active_questions[message.author.id]
         user_input = message.content.strip().upper()
 
+        if user_input not in ["A", "B", "C", "D"] and all(user_input != opt[3:].strip().upper() for opt in frage["options"]):
+            return  # Warten auf gültige Antwort A-D oder Text
+
         correct_letter = frage["answer"].upper()
         correct_option = next(opt for opt in frage["options"] if opt.startswith(correct_letter))
         correct_text = correct_option[3:].strip().upper()
