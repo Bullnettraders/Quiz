@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import os
 import random
+import asyncio
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -12,6 +13,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 user_scores = {}
 active_questions = {}
 greeted_users = set()
+private_channels = {}
 
 # --- Fragenpool (leicht, mittel, schwer) ---
 
@@ -56,11 +58,10 @@ quiz_medium = [
     {"question": "Was ist ein gleitender Durchschnitt (MA)?", "options": ["A) Glättung der Kursbewegung", "B) Volumendurchschnitt", "C) RSI-Alternative", "D) Stop-Loss-Tool"], "answer": "A"},
     {"question": "Was ist ein Volatilitätsindikator?", "options": ["A) Bollinger Bänder", "B) Fibonacci", "C) RSI", "D) Order Flow"], "answer": "A"},
     {"question": "Was ist ein Fakeout?", "options": ["A) Starker Trend", "B) Fehlausbruch", "C) Candlestick", "D) Volumendruck"], "answer": "B"},
-    {"question": "Was bedeutet \"Overbought\" im RSI?", "options": ["A) Überverkauft", "B) Stark gestiegener Kurs, mögliches Verkaufssignal", "C) Tradingpause", "D) Signal zum Kaufen"], "answer": "B"},
+    {"question": "Was bedeutet 'Overbought' im RSI?", "options": ["A) Überverkauft", "B) Stark gestiegener Kurs, mögliches Verkaufssignal", "C) Tradingpause", "D) Signal zum Kaufen"], "answer": "B"},
     {"question": "Was ist eine Korrektur?", "options": ["A) Trendwende", "B) Rücksetzer im laufenden Trend", "C) Long-Einstieg", "D) Short-Auslösung"], "answer": "B"},
     {"question": "Was ist ein Pullback?", "options": ["A) Trendstart", "B) Rücklauf nach Ausbruch", "C) Verlustzone", "D) Hebelverlust"], "answer": "B"}
 ]
-
 quiz_hard = [
     {"question": "Was ist ein Drawdown?", "options": ["A) Maximaler Gewinn", "B) Rückgang vom Hoch zum Tief", "C) Hebelverlust", "D) Seitwärtsphase"], "answer": "B"},
     {"question": "Was ist eine Margin Call?", "options": ["A) Gewinnmitteilung", "B) Aufforderung, Kapital nachzuzahlen", "C) Verkaufsorder", "D) Tradingstil"], "answer": "B"},
@@ -88,7 +89,7 @@ quiz_hard = [
 async def start(ctx):
     await ctx.send(
         f"👋 Hallo {ctx.author.mention}! Willkommen beim **Trading-Quiz**! 🎓\n"
-        "Starte mit `!quiz leicht`, `!quiz mittel`, `!quiz schwer` und antworte mit A–D oder dem Antworttext."
+        "Starte mit `!quiz leicht`, `!quiz mittel`, `!quiz schwer` – du bekommst dann einen privaten Quiz-Channel."
     )
 
 @bot.command()
@@ -104,12 +105,24 @@ async def quiz(ctx, stufe: str):
         await ctx.send("Verwende: `!quiz leicht`, `!quiz mittel`, `!quiz schwer`.")
         return
 
+    # Erstelle privaten Channel
+    guild = ctx.guild
+    overwrites = {
+        guild.default_role: discord.PermissionOverwrite(read_messages=False),
+        ctx.author: discord.PermissionOverwrite(read_messages=True, send_messages=True),
+        guild.me: discord.PermissionOverwrite(read_messages=True)
+    }
+
+    channel_name = f"quiz-{ctx.author.name.lower()}"
+    quiz_channel = await guild.create_text_channel(channel_name, overwrites=overwrites, reason="Private Quiz Session")
+
     fragen, punkte = difficulty_map[stufe]
     frage = random.choice(fragen)
-    active_questions[ctx.author.id] = (frage, punkte)
+    active_questions[ctx.author.id] = (frage, punkte, quiz_channel.id)
+    private_channels[ctx.author.id] = quiz_channel.id
 
     frage_text = f"🎯 **{frage['question']}**\n" + "\n".join(frage['options'])
-    await ctx.send(frage_text + "\n\nAntworte mit **A**, **B**, **C**, **D** oder dem Antworttext.")
+    await quiz_channel.send(f"👋 {ctx.author.mention}, hier ist deine Frage:\n\n{frage_text}\n\nAntworte mit **A**, **B**, **C**, **D** oder dem Antworttext.")
 
 @bot.event
 async def on_message(message):
@@ -118,11 +131,15 @@ async def on_message(message):
         return
 
     if message.author.id in active_questions:
-        frage, punkte = active_questions[message.author.id]
+        frage, punkte, channel_id = active_questions[message.author.id]
+
+        if message.channel.id != channel_id:
+            return  # Ignoriere Antworten außerhalb des privaten Channels
+
         user_input = message.content.strip().upper()
 
         if user_input not in ["A", "B", "C", "D"] and all(user_input != opt[3:].strip().upper() for opt in frage["options"]):
-            return  # Warten auf gültige Antwort A-D oder Text
+            return  # Ungültige Eingabe
 
         correct_letter = frage["answer"].upper()
         correct_option = next(opt for opt in frage["options"] if opt.startswith(correct_letter))
@@ -137,6 +154,11 @@ async def on_message(message):
             )
 
         del active_questions[message.author.id]
+        channel = message.channel
+
+        await message.channel.send("🧹 Dieser Channel wird in 10 Sekunden gelöscht...")
+        await asyncio.sleep(10)
+        await channel.delete()
 
 @bot.command()
 async def ranking(ctx):
