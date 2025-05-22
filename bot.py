@@ -13,7 +13,6 @@ user_scores = {}
 active_questions = {}
 greeted_users = set()
 
-# Fragenpools (vollständig)
 quiz_easy = [
     {"question": "Was ist ein 'Stop-Loss'?", "options": ["A) Gewinnziel", "B) Verlustbegrenzung", "C) Ordertyp", "D) Candlestick"], "answer": "B"},
     {"question": "Was zeigt ein grüner Candlestick?", "options": ["A) Kurs fällt", "B) Markt ist offen", "C) Kurs steigt", "D) Keine Aussage"], "answer": "C"},
@@ -55,7 +54,7 @@ quiz_medium = [
     {"question": "Was ist ein gleitender Durchschnitt (MA)?", "options": ["A) Glättung der Kursbewegung", "B) Volumendurchschnitt", "C) RSI-Alternative", "D) Stop-Loss-Tool"], "answer": "A"},
     {"question": "Was ist ein Volatilitätsindikator?", "options": ["A) Bollinger Bänder", "B) Fibonacci", "C) RSI", "D) Order Flow"], "answer": "A"},
     {"question": "Was ist ein Fakeout?", "options": ["A) Starker Trend", "B) Fehlausbruch", "C) Candlestick", "D) Volumendruck"], "answer": "B"},
-    {"question": "Was bedeutet "Overbought" im RSI?", "options": ["A) Überverkauft", "B) Stark gestiegener Kurs, mögliches Verkaufssignal", "C) Tradingpause", "D) Signal zum Kaufen"], "answer": "B"},
+    {"question": "Was bedeutet \"Overbought\" im RSI?", "options": ["A) Überverkauft", "B) Stark gestiegener Kurs, mögliches Verkaufssignal", "C) Tradingpause", "D) Signal zum Kaufen"], "answer": "B"},
     {"question": "Was ist eine Korrektur?", "options": ["A) Trendwende", "B) Rücksetzer im laufenden Trend", "C) Long-Einstieg", "D) Short-Auslösung"], "answer": "B"},
     {"question": "Was ist ein Pullback?", "options": ["A) Trendstart", "B) Rücklauf nach Ausbruch", "C) Verlustzone", "D) Hebelverlust"], "answer": "B"}
 ]
@@ -79,8 +78,115 @@ quiz_hard = [
     {"question": "Was ist ein Swing-High?", "options": ["A) Langfristiger Hochpunkt", "B) Zwischenhoch in Bewegung", "C) Tief", "D) Konsolidierung"], "answer": "B"},
     {"question": "Was ist ein Dead Cat Bounce?", "options": ["A) Bullischer Ausbruch", "B) Kurze Gegenbewegung nach starkem Abverkauf", "C) Chartfehler", "D) Gewinnphase"], "answer": "B"},
     {"question": "Was ist ein Gap Fill?", "options": ["A) Ausfüllen von Kurslücken", "B) Chartmuster", "C) Verlust", "D) Indikator"], "answer": "A"},
-    {"question": "Was bedeutet "Risk per Trade"?", "options": ["A) Gewinnziel", "B) Kapitalrisiko je Trade", "C) Ordergröße", "D) Brokerkosten"], "answer": "B"},
+    {"question": "Was bedeutet \"Risk per Trade\"?", "options": ["A) Gewinnziel", "B) Kapitalrisiko je Trade", "C) Ordergröße", "D) Brokerkosten"], "answer": "B"},
     {"question": "Was ist ein Portfolio Drawdown?", "options": ["A) Gewinn", "B) Gesamtverlust bezogen auf das Depot", "C) Ein Trade", "D) Margin-Handel"], "answer": "B"}
 ]
 
-# Der Rest des Skripts bleibt unverändert...
+@bot.command()
+async def start(ctx):
+    await ctx.send(
+        f"👋 Hallo {ctx.author.mention}! Willkommen beim **Trading-Quiz**! 🎓
+"
+        "Du kannst direkt loslegen mit einem der folgenden Befehle:
+"
+        "`!quiz leicht` – für Einsteiger
+"
+        "`!quiz mittel` – für Fortgeschrittene
+"
+        "`!quiz schwer` – für Profis
+
+"
+        "Beantworte jede Frage mit `A`, `B`, `C` oder `D`. Viel Erfolg! 💪"
+    )
+
+@bot.command()
+async def quiz(ctx, stufe: str):
+    stufe = stufe.lower()
+    if stufe not in difficulty_map:
+        await ctx.send("Verwende bitte: `!quiz leicht`, `!quiz mittel` oder `!quiz schwer`")
+        return
+
+    if ctx.author.id not in greeted_users:
+        greeted_users.add(ctx.author.id)
+        await ctx.send(
+            f"👋 Willkommen im Trading-Quiz, {ctx.author.mention}!
+"
+            "Beantworte einfach mit A, B, C oder D! 📈"
+        )
+
+    fragen, punkte = difficulty_map[stufe]
+    frage = random.choice(fragen)
+    active_questions[ctx.author.id] = (frage, punkte)
+
+    frage_text = f"🎯 **{frage['question']}**
+"
+    frage_text += "
+".join(frage["options"])
+    frage_text += "
+
+Antworte mit **A**, **B**, **C** oder **D**"
+    await ctx.send(frage_text)
+
+@bot.event
+async def on_message(message):
+    await bot.process_commands(message)
+    if message.author.bot:
+        return
+
+    if message.author.id in active_questions:
+        frage, punkte = active_questions[message.author.id]
+        user_answer = message.content.strip().upper()
+
+        if user_answer == frage["answer"]:
+            user_scores[message.author.id] = user_scores.get(message.author.id, 0) + punkte
+            responses = [
+                f"✅ Richtig, {message.author.mention}! +{punkte} Punkte! 🎉",
+                f"🎯 Stimmt genau! {punkte} Punkte für {message.author.name}!",
+                f"🔥 {message.author.mention} trifft ins Schwarze! +{punkte} Punkte!"
+            ]
+            await message.channel.send(random.choice(responses))
+        else:
+            await message.channel.send(f"❌ Falsch, {message.author.mention}. Die richtige Antwort war **{frage['answer']}**.")
+
+        score = user_scores.get(message.author.id, 0)
+        ranking = sorted(user_scores.items(), key=lambda x: x[1], reverse=True)
+        rank = [uid for uid, _ in ranking].index(message.author.id) + 1
+        total = len(ranking)
+
+        await message.channel.send(
+            f"📊 Punktestand: **{score}**
+🏆 Rang: **Platz {rank} von {total} Spielern**"
+        )
+
+        del active_questions[message.author.id]
+
+@bot.command()
+async def ranking(ctx):
+    if not user_scores:
+        await ctx.send("Noch keine Punkte vergeben worden.")
+        return
+
+    ranking = sorted(user_scores.items(), key=lambda x: x[1], reverse=True)
+    lines = [f"🏆 **Top 10 Spieler:**"]
+    for i, (user_id, score) in enumerate(ranking[:10], 1):
+        user = await bot.fetch_user(user_id)
+        lines.append(f"{i}. {user.name} – {score} Punkte")
+
+    await ctx.send("
+".join(lines))
+
+@bot.event
+async def on_member_join(member):
+    try:
+        quiz_channel_id = int(os.environ.get("QUIZ_CHANNEL_ID"))
+        channel = bot.get_channel(quiz_channel_id)
+        if channel:
+            await channel.send(
+                f"👋 Willkommen im Trading-Quiz, {member.mention}!
+"
+                "Starte mit `!quiz leicht`, `!quiz mittel` oder `!quiz schwer`! 🌟"
+            )
+    except Exception as e:
+        print(f"Fehler beim Senden der Willkommensnachricht: {e}")
+
+bot.run(os.environ["DISCORD_BOT_TOKEN"])
