@@ -5,19 +5,15 @@ import random
 
 intents = discord.Intents.default()
 intents.message_content = True
-intents.members = True  # Wichtig für on_member_join
+intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# Datenstrukturen
 user_scores = {}
 active_questions = {}
 greeted_users = set()
 
-# Channel-ID deines Quiz-Channels (ersetzen mit deiner echten ID)
-quiz_channel_id = 123456789012345678  # <-- Hier deine Channel-ID einsetzen
-
-# Fragenpools (jeweils nur 3 beispielhaft - du kannst bis 20 pro Block ergänzen)
+# Fragenpools (je 3 Beispiele pro Stufe)
 quiz_easy = [
     {"question": "Was ist ein 'Stop-Loss'?", "options": ["A) Gewinnziel", "B) Verlustbegrenzung", "C) Ordertyp", "D) Candlestick"], "answer": "B"},
     {"question": "Was zeigt ein grüner Candlestick?", "options": ["A) Kurs fällt", "B) Markt ist offen", "C) Kurs steigt", "D) Keine Aussage"], "answer": "C"},
@@ -48,6 +44,7 @@ async def on_ready():
 
 @bot.event
 async def on_member_join(member):
+    quiz_channel_id = int(os.environ.get("QUIZ_CHANNEL_ID"))
     channel = bot.get_channel(quiz_channel_id)
     if channel:
         await channel.send(
@@ -124,5 +121,5 @@ async def ranking(ctx):
 
     await ctx.send("\n".join(lines))
 
-# Bot starten (Token über Umgebungsvariable in Railway setzen)
+# Bot starten
 bot.run(os.environ["DISCORD_BOT_TOKEN"])
