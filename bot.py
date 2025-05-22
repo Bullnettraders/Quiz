@@ -82,14 +82,22 @@ quiz_hard = [
     {"question": "Was ist ein Portfolio Drawdown?", "options": ["A) Gewinn", "B) Gesamtverlust bezogen auf das Depot", "C) Ein Trade", "D) Margin-Handel"], "answer": "B"}
 ]
 
-await ctx.send(
-    f"👋 Hallo {ctx.author.mention}! Willkommen beim **Trading-Quiz**! 🎓\n"
-    "Du kannst direkt loslegen mit einem der folgenden Befehle:\n"
-    "`!quiz leicht` – für Einsteiger\n"
-    "`!quiz mittel` – für Fortgeschrittene\n"
-    "`!quiz schwer` – für Profis\n\n"
-    "Beantworte jede Frage mit `A`, `B`, `C` oder `D`. Viel Erfolg! 💪"
-)
+@bot.command()
+async def start(ctx):
+    await ctx.send(
+        f"👋 Hallo {ctx.author.mention}! Willkommen beim **Trading-Quiz**! 🎓
+"
+        "Du kannst direkt loslegen mit einem der folgenden Befehle:
+"
+        "`!quiz leicht` – für Einsteiger
+"
+        "`!quiz mittel` – für Fortgeschrittene
+"
+        "`!quiz schwer` – für Profis
+
+"
+        "Beantworte jede Frage mit `A`, `B`, `C` oder `D`. Viel Erfolg! 💪"
+    )
 
 @bot.command()
 async def quiz(ctx, stufe: str):
