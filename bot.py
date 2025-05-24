@@ -14,6 +14,7 @@ user_scores = {}
 active_questions = {}
 greeted_users = set()
 private_channels = {}
+quiz_category_name = "Quiz"  # Kategorie für Quiz-Channels
 
 # --- Fragenpool (leicht, mittel, schwer) ---
 
@@ -39,6 +40,7 @@ quiz_easy = [
     {"question": "Was ist ein Portfolio?", "options": ["A) Eine Aktie", "B) Alle gehaltenen Investitionen", "C) Nur Futures", "D) Kontoauszug"], "answer": "B"},
     {"question": "Was ist Scalping?", "options": ["A) Langfristiger Handel", "B) Kurzfristiger Handel mit kleinen Gewinnen", "C) Fundamentalstrategie", "D) Trading-Analyse"], "answer": "B"}
 ]
+
 
 quiz_medium = [
     {"question": "Was ist der RSI?", "options": ["A) Indikator für Volumen", "B) Relative Strength Index", "C) Risikokonto", "D) Fundamentalanalyse"], "answer": "B"},
@@ -105,8 +107,12 @@ async def quiz(ctx, stufe: str):
         await ctx.send("Verwende: `!quiz leicht`, `!quiz mittel`, `!quiz schwer`.")
         return
 
-    # Erstelle privaten Channel
     guild = ctx.guild
+    category_name = quiz_category_name
+    category = discord.utils.get(guild.categories, name=category_name)
+    if not category:
+        category = await guild.create_category(category_name)
+
     overwrites = {
         guild.default_role: discord.PermissionOverwrite(read_messages=False),
         ctx.author: discord.PermissionOverwrite(read_messages=True, send_messages=True),
@@ -114,7 +120,12 @@ async def quiz(ctx, stufe: str):
     }
 
     channel_name = f"quiz-{ctx.author.name.lower()}"
-    quiz_channel = await guild.create_text_channel(channel_name, overwrites=overwrites, reason="Private Quiz Session")
+    quiz_channel = await guild.create_text_channel(
+        channel_name,
+        overwrites=overwrites,
+        category=category,
+        reason="Private Quiz Session"
+    )
 
     fragen, punkte = difficulty_map[stufe]
     frage = random.choice(fragen)
@@ -134,12 +145,12 @@ async def on_message(message):
         frage, punkte, channel_id = active_questions[message.author.id]
 
         if message.channel.id != channel_id:
-            return  # Ignoriere Antworten außerhalb des privaten Channels
+            return
 
         user_input = message.content.strip().upper()
 
         if user_input not in ["A", "B", "C", "D"] and all(user_input != opt[3:].strip().upper() for opt in frage["options"]):
-            return  # Ungültige Eingabe
+            return
 
         correct_letter = frage["answer"].upper()
         correct_option = next(opt for opt in frage["options"] if opt.startswith(correct_letter))
@@ -154,11 +165,9 @@ async def on_message(message):
             )
 
         del active_questions[message.author.id]
-        channel = message.channel
-
         await message.channel.send("🧹 Dieser Channel wird in 10 Sekunden gelöscht...")
         await asyncio.sleep(10)
-        await channel.delete()
+        await message.channel.delete()
 
 @bot.command()
 async def ranking(ctx):
