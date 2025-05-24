@@ -203,26 +203,4 @@ async def on_message(message):
                 lines.append(f"{i}. {user.name} – {score} Punkte")
             await ranking_channel.purge(limit=10)
             await ranking_channel.send("
-.join(lines))
-
-@bot.command()
-async def ranking(ctx):
-    if not user_scores:
-        await ctx.send("Noch keine Punkte vergeben.")
-        return
-
-    ranking = sorted(user_scores.items(), key=lambda x: x[1], reverse=True)
-    lines = ["🏆 **Top 10 Spieler:**"]
-    for i, (user_id, score) in enumerate(ranking[:10], 1):
-        user = await bot.fetch_user(user_id)
-        lines.append(f"{i}. {user.name} – {score} Punkte")
-
-    await ctx.send("\n".join(lines))
-
-    # Versuche das Ranking auch in einen festen Ranking-Channel zu posten
-    ranking_channel = discord.utils.get(ctx.guild.text_channels, name="ranking")
-    if ranking_channel and ranking_channel.id != ctx.channel.id:
-        await ranking_channel.purge(limit=10)
-        await ranking_channel.send("\n".join(lines))
-
-bot.run(os.environ["DISCORD_BOT_TOKEN"])
+".join(lines))
