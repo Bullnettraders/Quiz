@@ -16,7 +16,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 SCORE_FILE = "scores.json"
 user_scores = {}
 active_questions = {}
-quiz_category_name = "QUIZ"
+quiz_category_name = "Quiz"
 
 def load_scores():
     global user_scores
@@ -45,6 +45,7 @@ async def on_ready():
 
 @bot.command()
 async def start(ctx):
+    await ctx.message.delete()
     await ctx.send(
         f"👋 Hallo {ctx.author.mention}! Willkommen beim **Trading-Quiz**! 🎓\n"
         "Starte mit `!quiz leicht`, `!quiz mittel`, `!quiz schwer` – du bekommst dann einen privaten Quiz-Channel."
@@ -52,6 +53,7 @@ async def start(ctx):
 
 @bot.command()
 async def quiz(ctx, stufe: str):
+    await ctx.message.delete()
     difficulty_map = {
         "leicht": (quiz_easy, 1),
         "mittel": (quiz_medium, 2),
@@ -89,14 +91,17 @@ async def quiz(ctx, stufe: str):
 
 @bot.command()
 async def leicht(ctx):
+    await ctx.message.delete()
     await quiz(ctx, "leicht")
 
 @bot.command()
 async def mittel(ctx):
+    await ctx.message.delete()
     await quiz(ctx, "mittel")
 
 @bot.command()
 async def schwer(ctx):
+    await ctx.message.delete()
     await quiz(ctx, "schwer")
 
 @bot.event
@@ -145,6 +150,23 @@ async def on_message(message):
                 await ranking_channel.send("\n".join(lines))
             except Exception as e:
                 await message.channel.send(f"⚠️ Fehler beim Aktualisieren des Rankings: {e}")
+
+@bot.command()
+async def stats(ctx):
+    user_id = str(ctx.author.id)
+    punkte = user_scores.get(user_id, 0)
+    await ctx.send(f"📊 {ctx.author.mention}, du hast aktuell **{punkte} Punkte**.")
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def reset(ctx, member: discord.Member):
+    user_id = str(member.id)
+    if user_id in user_scores:
+        user_scores[user_id] = 0
+        save_scores()
+        await ctx.send(f"🔁 Punktestand von {member.mention} wurde zurückgesetzt.")
+    else:
+        await ctx.send(f"ℹ️ {member.mention} hat noch keine Punkte.")
 
 # Bot starten
 if __name__ == "__main__":
