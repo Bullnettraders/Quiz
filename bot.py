@@ -16,7 +16,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 SCORE_FILE = "scores.json"
 user_scores = {}
 active_questions = {}
-quiz_category_name = "Quiz"
+quiz_category_name = "QUIZ"
 
 def load_scores():
     global user_scores
@@ -91,11 +91,14 @@ async def quiz(ctx, stufe: str):
     active_questions[ctx.author.id] = (frage, punkte, quiz_channel.id)
 
     frage_text = f"🎯 **{frage['question']}**\n" + "\n".join(frage['options'])
+    frage_text = f"🎯 **{frage['question']}**
+" + "
+".join(frage['options'])
     await quiz_channel.send(f"{ctx.author.mention}, hier ist deine Frage:
 
 {frage_text}
 
-Antworte mit **A**, **B**, **C**, **D** oder dem Antworttext.")")
+Antworte mit **A**, **B**, **C**, **D** oder dem Antworttext.")
     msg = await ctx.send(f"📬 Dein privater Quiz-Channel wurde erstellt, {ctx.author.mention}!")
     await asyncio.sleep(10)
     await msg.delete()
@@ -133,14 +136,14 @@ async def on_message(message):
 
         if user_input == correct_letter or user_input == correct_text:
             user_scores[str(message.author.id)] = user_scores.get(str(message.author.id), 0) + punkte
+            user_scores[str(message.author.id)] = user_scores.get(str(message.author.id), 0) + punkte
             await message.channel.send(f"✅ Richtig, {message.author.mention}! +{punkte} Punkte!")
             await asyncio.sleep(3)
-            await message.delete()[str(message.author.id)] = user_scores.get(str(message.author.id), 0) + punkte
-            await message.channel.send(f"✅ Richtig, {message.author.mention}! +{punkte} Punkte!")
+            await message.delete()
         else:
             await message.channel.send(f"❌ Falsch. Richtige Antwort: **{correct_letter} – {correct_text.title()}**")
             await asyncio.sleep(3)
-            await message.delete(). Richtige Antwort: **{correct_letter} – {correct_text.title()}**")
+            await message.delete()
 
         del active_questions[message.author.id]
         await message.channel.send("🧹 Channel wird in 10 Sekunden gelöscht...")
