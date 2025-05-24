@@ -192,19 +192,23 @@ async def on_message(message):
         await asyncio.sleep(10)
         await message.channel.delete()
 
-        File "/app/bot.py", line 198
+                # ⬇️ Automatisch Ranking nach jeder Antwort aktualisieren
+        guild = message.guild
+        ranking_channel = discord.utils.get(guild.text_channels, name="ranking")
+        if ranking_channel:
+            try:
+                ranking_sorted = sorted(user_scores.items(), key=lambda x: x[1], reverse=True)
+                lines = ["🏆 **Top 10 Spieler:**"]
+                for i, (user_id, score) in enumerate(ranking_sorted[:10], 1):
+                    try:
+                        user = await bot.fetch_user(user_id)
+                        username = user.name
+                    except Exception as e:
+                        print(f"Fehler beim Abrufen des Benutzers {user_id}: {e}")
+                        username = f"User-ID {user_id}"
+                    lines.append(f"{i}. {username} – {score} Punkte")
 
-    if ranking_channel:
-
-IndentationError: unexpected indent
-
-  File "/app/bot.py", line 198
-
-    if ranking_channel:
-
-IndentationError: unexpected indent
-
-  File "/app/bot.py", line 198
-
-    if ranking_channel:
-
+                await ranking_channel.purge(limit=10)
+                await ranking_channel.send("\n".join(lines))
+            except Exception as e:
+                print(f"Fehler beim Aktualisieren des Rankings: {e}")
