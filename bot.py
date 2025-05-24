@@ -150,6 +150,6 @@ async def on_message(message):
 if __name__ == "__main__":
     TOKEN = os.getenv("DISCORD_TOKEN")
     if not TOKEN:
-    print("❌ DISCORD_TOKEN fehlt! Stelle sicher, dass die Umgebungsvariable auf Railway gesetzt ist.")
-else:
+        print("❌ DISCORD_TOKEN fehlt! Stelle sicher, dass die Umgebungsvariable auf Railway gesetzt ist.")
+    else:
         bot.run(TOKEN)
