@@ -168,6 +168,7 @@ async def on_message(message):
 
 @bot.command()
 async def stats(ctx):
+    await ctx.message.delete()  # Befehl löschen
     user_id = str(ctx.author.id)
     punkte = user_scores.get(user_id, 0)
     msg = await ctx.send(f"📊 {ctx.author.mention}, du hast aktuell **{punkte} Punkte**.")
