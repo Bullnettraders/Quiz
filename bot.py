@@ -16,7 +16,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 SCORE_FILE = "scores.json"
 user_scores = {}
 active_questions = {}
-quiz_category_name = "Quiz"
+quiz_category_name = "QUIZ"
 
 def load_scores():
     global user_scores
@@ -46,10 +46,12 @@ async def on_ready():
 @bot.command()
 async def start(ctx):
     await ctx.message.delete()
-    await ctx.send(
+    msg = await ctx.send(
         f"👋 Hallo {ctx.author.mention}! Willkommen beim **Trading-Quiz**! 🎓\n"
         "Starte mit `!quiz leicht`, `!quiz mittel`, `!quiz schwer` – du bekommst dann einen privaten Quiz-Channel."
     )
+    await asyncio.sleep(10)
+    await msg.delete()
 
 @bot.command()
 async def quiz(ctx, stufe: str):
@@ -87,19 +89,26 @@ async def quiz(ctx, stufe: str):
     active_questions[ctx.author.id] = (frage, punkte, quiz_channel.id)
 
     frage_text = f"🎯 **{frage['question']}**\n" + "\n".join(frage['options'])
-    await quiz_channel.send(f"{ctx.author.mention}, hier ist deine Frage:\n\n{frage_text}\n\nAntworte mit **A**, **B**, **C**, **D** oder dem Antworttext.")
+    await quiz_channel.send(f"{ctx.author.mention}, hier ist deine Frage:
 
-@bot.command()
+{frage_text}
+
+Antworte mit **A**, **B**, **C**, **D** oder dem Antworttext.")
+    msg = await ctx.send(f"📬 Dein privater Quiz-Channel wurde erstellt, {ctx.author.mention}!")
+    await asyncio.sleep(10)
+    await msg.delete()
+
+@bot.command(aliases=['quizleicht'])
 async def leicht(ctx):
     await ctx.message.delete()
     await quiz(ctx, "leicht")
 
-@bot.command()
+@bot.command(aliases=['quizmittel'])
 async def mittel(ctx):
     await ctx.message.delete()
     await quiz(ctx, "mittel")
 
-@bot.command()
+@bot.command(aliases=['quizschwer'])
 async def schwer(ctx):
     await ctx.message.delete()
     await quiz(ctx, "schwer")
