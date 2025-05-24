@@ -195,12 +195,17 @@ async def on_message(message):
         # ⬇️ Automatisch Ranking nach jeder Antwort aktualisieren
         guild = message.guild
         ranking_channel = discord.utils.get(guild.text_channels, name="ranking")
-                if ranking_channel:
+                        if ranking_channel:
             ranking_sorted = sorted(user_scores.items(), key=lambda x: x[1], reverse=True)
             lines = ["🏆 **Top 10 Spieler:**"]
             for i, (user_id, score) in enumerate(ranking_sorted[:10], 1):
-                user = await bot.fetch_user(user_id)
-                lines.append(f"{i}. {user.name} – {score} Punkte")
+                try:
+                    user = await bot.fetch_user(user_id)
+                    username = user.name
+                except:
+                    username = f"User-ID {user_id}"
+                lines.append(f"{i}. {username} – {score} Punkte")
+
             await ranking_channel.purge(limit=10)
             await ranking_channel.send("\n".join(lines))
 
