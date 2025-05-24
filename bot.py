@@ -14,7 +14,7 @@ user_scores = {}
 active_questions = {}
 greeted_users = set()
 private_channels = {}
-quiz_category_name = "Quiz"  # Kategorie für Quiz-Channels
+quiz_category_name = "QUIZ"  # Kategorie für Quiz-Channels
 
 # --- Fragenpool (leicht, mittel, schwer) ---
 
