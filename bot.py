@@ -202,4 +202,5 @@ async def on_message(message):
                 user = await bot.fetch_user(user_id)
                 lines.append(f"{i}. {user.name} – {score} Punkte")
             await ranking_channel.purge(limit=10)
-            await ranking_channel.send("".join(lines))
+            await ranking_channel.send("
+".join(lines))
