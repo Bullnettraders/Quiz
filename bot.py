@@ -16,7 +16,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 SCORE_FILE = "scores.json"
 user_scores = {}
 active_questions = {}
-quiz_category_name = "QUIZ"
+quiz_category_name = "Quiz"
 
 def load_scores():
     global user_scores
@@ -95,7 +95,7 @@ async def quiz(ctx, stufe: str):
 
 {frage_text}
 
-Antworte mit **A**, **B**, **C**, **D** oder dem Antworttext.")
+Antworte mit **A**, **B**, **C**, **D** oder dem Antworttext.")")
     msg = await ctx.send(f"📬 Dein privater Quiz-Channel wurde erstellt, {ctx.author.mention}!")
     await asyncio.sleep(10)
     await msg.delete()
