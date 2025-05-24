@@ -90,10 +90,16 @@ async def quiz(ctx, stufe: str):
     frage = random.choice(fragen)
     active_questions[ctx.author.id] = (frage, punkte, quiz_channel.id)
 
-    frage_text = f"🎯 **{frage['question']}**\n" + "\n".join(frage['options'])
     frage_text = f"🎯 **{frage['question']}**
 " + "
 ".join(frage['options'])
+    await quiz_channel.send(
+        f"{ctx.author.mention}, hier ist deine Frage:
+
+{frage_text}
+
+Antworte mit **A**, **B**, **C**, **D** oder dem Antworttext."
+    )
     await quiz_channel.send(
         f"{ctx.author.mention}, hier ist deine Frage:
 
