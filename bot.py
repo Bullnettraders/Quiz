@@ -16,7 +16,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 SCORE_FILE = "scores.json"
 user_scores = {}
 active_questions = {}
-quiz_category_name = "Quiz"
+quiz_category_name = "QUIZ"
 
 def load_scores():
     global user_scores
