@@ -3,6 +3,7 @@ from discord.ext import commands
 import os
 import random
 import asyncio
+import json
 
 from fragenpool import quiz_easy, quiz_medium, quiz_hard
 
@@ -12,13 +13,27 @@ intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+SCORE_FILE = "scores.json"
 user_scores = {}
 active_questions = {}
 quiz_category_name = "Quiz"
 
+def load_scores():
+    global user_scores
+    if os.path.exists(SCORE_FILE):
+        with open(SCORE_FILE, "r") as f:
+            user_scores = json.load(f)
+    else:
+        user_scores = {}
+
+def save_scores():
+    with open(SCORE_FILE, "w") as f:
+        json.dump(user_scores, f)
+
 @bot.event
 async def on_ready():
     print(f"✅ Bot ist eingeloggt als {bot.user}")
+    load_scores()
     for guild in bot.guilds:
         ranking_channel = discord.utils.get(guild.text_channels, name="ranking")
         if ranking_channel is None:
@@ -101,7 +116,7 @@ async def on_message(message):
         correct_text = correct_option[3:].strip().upper()
 
         if user_input == correct_letter or user_input == correct_text:
-            user_scores[message.author.id] = user_scores.get(message.author.id, 0) + punkte
+            user_scores[str(message.author.id)] = user_scores.get(str(message.author.id), 0) + punkte
             await message.channel.send(f"✅ Richtig, {message.author.mention}! +{punkte} Punkte!")
         else:
             await message.channel.send(f"❌ Falsch. Richtige Antwort: **{correct_letter} – {correct_text.title()}**")
@@ -110,6 +125,7 @@ async def on_message(message):
         await message.channel.send("🧹 Channel wird in 10 Sekunden gelöscht...")
         await asyncio.sleep(10)
         await message.channel.delete()
+        save_scores()
 
         # Ranking aktualisieren
         guild = message.guild
@@ -120,7 +136,7 @@ async def on_message(message):
                 lines = ["🏆 **Top 10 Spieler:**"]
                 for i, (user_id, score) in enumerate(ranking_sorted[:10], 1):
                     try:
-                        user = await bot.fetch_user(user_id)
+                        user = await bot.fetch_user(int(user_id))
                         username = user.name
                     except:
                         username = f"User-ID {user_id}"
