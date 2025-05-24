@@ -14,7 +14,7 @@ user_scores = {}
 active_questions = {}
 greeted_users = set()
 private_channels = {}
-quiz_category_name = "QUIZ"  # Kategorie für Quiz-Channels
+quiz_category_name = "Quiz"  # Kategorie für Quiz-Channels
 
 # --- Fragenpool (leicht, mittel, schwer) ---
 
@@ -40,8 +40,6 @@ quiz_easy = [
     {"question": "Was ist ein Portfolio?", "options": ["A) Eine Aktie", "B) Alle gehaltenen Investitionen", "C) Nur Futures", "D) Kontoauszug"], "answer": "B"},
     {"question": "Was ist Scalping?", "options": ["A) Langfristiger Handel", "B) Kurzfristiger Handel mit kleinen Gewinnen", "C) Fundamentalstrategie", "D) Trading-Analyse"], "answer": "B"}
 ]
-
-
 quiz_medium = [
     {"question": "Was ist der RSI?", "options": ["A) Indikator für Volumen", "B) Relative Strength Index", "C) Risikokonto", "D) Fundamentalanalyse"], "answer": "B"},
     {"question": "Was bedeutet eine divergierende RSI-Anzeige?", "options": ["A) Trendbestätigung", "B) Trendumkehr", "C) Volumenanstieg", "D) Seitwärtsphase"], "answer": "B"},
@@ -86,6 +84,18 @@ quiz_hard = [
     {"question": "Was bedeutet 'Risk per Trade'?", "options": ["A) Gewinnziel", "B) Kapitalrisiko je Trade", "C) Ordergröße", "D) Brokerkosten"], "answer": "B"},
     {"question": "Was ist ein Portfolio Drawdown?", "options": ["A) Gewinn", "B) Gesamtverlust bezogen auf das Depot", "C) Ein Trade", "D) Margin-Handel"], "answer": "B"}
 ]
+
+@bot.event
+async def on_ready():
+    print(f"Bot ist eingeloggt als {bot.user}.")
+    for guild in bot.guilds:
+        ranking_channel = discord.utils.get(guild.text_channels, name="ranking")
+        if ranking_channel is None:
+            overwrites = {
+                guild.default_role: discord.PermissionOverwrite(send_messages=False, read_messages=True),
+                guild.me: discord.PermissionOverwrite(send_messages=True, read_messages=True)
+            }
+            await guild.create_text_channel("ranking", overwrites=overwrites, reason="Automatisches Ranking-Board")
 
 @bot.command()
 async def start(ctx):
@@ -135,6 +145,19 @@ async def quiz(ctx, stufe: str):
     frage_text = f"🎯 **{frage['question']}**\n" + "\n".join(frage['options'])
     await quiz_channel.send(f"👋 {ctx.author.mention}, hier ist deine Frage:\n\n{frage_text}\n\nAntworte mit **A**, **B**, **C**, **D** oder dem Antworttext.")
 
+# Shortcuts für direktes Starten eines Quiz mit !leicht, !mittel, !schwer
+@bot.command()
+async def leicht(ctx):
+    await quiz(ctx, "leicht")
+
+@bot.command()
+async def mittel(ctx):
+    await quiz(ctx, "mittel")
+
+@bot.command()
+async def schwer(ctx):
+    await quiz(ctx, "schwer")
+
 @bot.event
 async def on_message(message):
     await bot.process_commands(message)
@@ -182,5 +205,11 @@ async def ranking(ctx):
         lines.append(f"{i}. {user.name} – {score} Punkte")
 
     await ctx.send("\n".join(lines))
+
+    # Versuche das Ranking auch in einen festen Ranking-Channel zu posten
+    ranking_channel = discord.utils.get(ctx.guild.text_channels, name="ranking")
+    if ranking_channel and ranking_channel.id != ctx.channel.id:
+        await ranking_channel.purge(limit=10)
+        await ranking_channel.send("\n".join(lines))
 
 bot.run(os.environ["DISCORD_BOT_TOKEN"])
