@@ -144,7 +144,7 @@ async def on_message(message):
                 await ranking_channel.purge(limit=10)
                 await ranking_channel.send("\n".join(lines))
             except Exception as e:
-                print(f"Ranking-Fehler: {e}")
+                await message.channel.send(f"⚠️ Fehler beim Aktualisieren des Rankings: {e}")
 
 # Bot starten
 if __name__ == "__main__":
