@@ -64,7 +64,9 @@ async def quiz(ctx, stufe: str):
 
     stufe = stufe.lower()
     if stufe not in difficulty_map:
-        await ctx.send("Verwende: `!quiz leicht`, `!quiz mittel`, `!quiz schwer`.")
+        msg = await ctx.send("Verwende: `!quiz leicht`, `!quiz mittel`, `!quiz schwer`.")
+        await asyncio.sleep(10)
+        await msg.delete()
         return
 
     guild = ctx.guild
@@ -132,8 +134,13 @@ async def on_message(message):
         if user_input == correct_letter or user_input == correct_text:
             user_scores[str(message.author.id)] = user_scores.get(str(message.author.id), 0) + punkte
             await message.channel.send(f"✅ Richtig, {message.author.mention}! +{punkte} Punkte!")
+            await asyncio.sleep(3)
+            await message.delete()[str(message.author.id)] = user_scores.get(str(message.author.id), 0) + punkte
+            await message.channel.send(f"✅ Richtig, {message.author.mention}! +{punkte} Punkte!")
         else:
             await message.channel.send(f"❌ Falsch. Richtige Antwort: **{correct_letter} – {correct_text.title()}**")
+            await asyncio.sleep(3)
+            await message.delete(). Richtige Antwort: **{correct_letter} – {correct_text.title()}**")
 
         del active_questions[message.author.id]
         await message.channel.send("🧹 Channel wird in 10 Sekunden gelöscht...")
@@ -164,7 +171,9 @@ async def on_message(message):
 async def stats(ctx):
     user_id = str(ctx.author.id)
     punkte = user_scores.get(user_id, 0)
-    await ctx.send(f"📊 {ctx.author.mention}, du hast aktuell **{punkte} Punkte**.")
+    msg = await ctx.send(f"📊 {ctx.author.mention}, du hast aktuell **{punkte} Punkte**.")
+    await asyncio.sleep(10)
+    await msg.delete()
 
 @bot.command()
 @commands.has_permissions(administrator=True)
