@@ -77,7 +77,7 @@ async def quiz(ctx, stufe: str):
     overwrites = {
         guild.default_role: discord.PermissionOverwrite(read_messages=False),
         ctx.author: discord.PermissionOverwrite(read_messages=True, send_messages=True),
-        guild.me: discord.PermissionOverwrite(read_messages=True)
+        guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)  # <-- Hier korrigiert
     }
 
     quiz_channel = await guild.create_text_channel(
@@ -168,7 +168,7 @@ async def on_message(message):
 
 @bot.command()
 async def stats(ctx):
-    await ctx.message.delete()  # Befehl löschen
+    await ctx.message.delete()
     user_id = str(ctx.author.id)
     punkte = user_scores.get(user_id, 0)
     msg = await ctx.send(f"📊 {ctx.author.mention}, du hast aktuell **{punkte} Punkte**.")
