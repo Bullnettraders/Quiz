@@ -11,6 +11,9 @@ try:
     from fragenpool import quiz_easy, quiz_medium, quiz_hard
 except ImportError:
     print("❌ Fehler: fragenpool.py wurde nicht gefunden oder enthält Fehler!")
+    quiz_easy = []
+    quiz_medium = []
+    quiz_hard = []
 
 # Lade Umgebungsvariablen (für Token)
 load_dotenv()
@@ -87,7 +90,10 @@ async def start(ctx):
 async def quiz(ctx, stufe: str = None):
     """Startet eine Quiz-Frage in einem neuen Kanal."""
     if stufe:
-        await ctx.message.delete()
+        try:
+            await ctx.message.delete()
+        except:
+            pass
     
     difficulty_map = {
         "leicht": (quiz_easy, 1),
@@ -108,11 +114,26 @@ async def quiz(ctx, stufe: str = None):
     if not category:
         category = await guild.create_category(QUIZ_CATEGORY_NAME)
 
-    # Privaten Kanal erstellen
+    # Privaten Kanal erstellen - MIT ALLEN NÖTIGEN PERMISSIONS
     overwrites = {
-        guild.default_role: discord.PermissionOverwrite(read_messages=False),
-        ctx.author: discord.PermissionOverwrite(read_messages=True, send_messages=True),
-        guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
+        guild.default_role: discord.PermissionOverwrite(
+            read_messages=False,
+            view_channel=False
+        ),
+        ctx.author: discord.PermissionOverwrite(
+            read_messages=True,
+            view_channel=True,
+            send_messages=True,
+            read_message_history=True
+        ),
+        guild.me: discord.PermissionOverwrite(
+            read_messages=True,
+            view_channel=True,
+            send_messages=True,
+            read_message_history=True,
+            manage_channels=True,
+            manage_messages=True
+        )
     }
 
     quiz_channel = await guild.create_text_channel(
@@ -120,32 +141,60 @@ async def quiz(ctx, stufe: str = None):
         overwrites=overwrites,
         category=category
     )
+    
+    # DEBUG: Prüfe ob Permissions gesetzt wurden
+    print(f"DEBUG: Channel erstellt: {quiz_channel.name} (ID: {quiz_channel.id})")
+    print(f"DEBUG: User: {ctx.author.name} (ID: {ctx.author.id})")
+    
+    # Permissions nochmal explizit setzen (Fallback)
+    await quiz_channel.set_permissions(ctx.author, 
+        read_messages=True,
+        view_channel=True,
+        send_messages=True,
+        read_message_history=True
+    )
+    print(f"DEBUG: Permissions nochmal gesetzt für {ctx.author.name}")
 
     # Frage auswählen
     fragen, punkte = difficulty_map[stufe]
+    
+    if not fragen:
+        await quiz_channel.send("❌ Keine Fragen für diese Schwierigkeit gefunden!")
+        await asyncio.sleep(5)
+        await quiz_channel.delete()
+        return
+    
     frage = random.choice(fragen)
     active_questions[ctx.author.id] = (frage, punkte, quiz_channel.id)
 
     # Nachricht im Quiz-Kanal senden
     frage_text = f"🎯 **{frage['question']}**\n\n" + "\n".join(frage['options'])
+    
     await quiz_channel.send(
-        f"{ctx.author.mention}, hier ist deine Frage:\n\n{frage_text}\n\n"
+        f"Hallo {ctx.author.mention}!\n\n"
+        f"{frage_text}\n\n"
         "Antworte mit **A**, **B**, **C** oder **D**."
     )
 
     msg = await ctx.send(f"📬 {ctx.author.mention}, dein Quiz wartet in {quiz_channel.mention}!")
     await asyncio.sleep(10)
-    await msg.delete()
+    try:
+        await msg.delete()
+    except:
+        pass
 
 # Aliase für die Schwierigkeitsgrade
 @bot.command()
-async def leicht(ctx): await quiz(ctx, "leicht")
+async def leicht(ctx): 
+    await quiz(ctx, "leicht")
 
 @bot.command()
-async def mittel(ctx): await quiz(ctx, "mittel")
+async def mittel(ctx): 
+    await quiz(ctx, "mittel")
 
 @bot.command()
-async def schwer(ctx): await quiz(ctx, "schwer")
+async def schwer(ctx): 
+    await quiz(ctx, "schwer")
 
 # --- Logik für Antworten ---
 
@@ -168,11 +217,21 @@ async def on_message(message):
         correct_letter = frage["answer"].upper()
         
         # Richtige Antwort finden für den Vergleich des Textes
-        correct_option = next(opt for opt in frage["options"] if opt.startswith(correct_letter))
+        correct_option = next((opt for opt in frage["options"] if opt.startswith(correct_letter)), None)
+        
+        if not correct_option:
+            await message.channel.send("❌ Fehler in der Frage-Konfiguration.")
+            del active_questions[message.author.id]
+            return
+        
         correct_text = correct_option[3:].strip().upper()
 
-        # Validierung
-        if user_input == correct_letter or user_input == correct_text:
+        # Validierung - nur A, B, C, D akzeptieren
+        if user_input not in ["A", "B", "C", "D"]:
+            await message.channel.send("❓ Bitte antworte nur mit **A**, **B**, **C** oder **D**.")
+            return
+
+        if user_input == correct_letter:
             user_scores[str(message.author.id)] = user_scores.get(str(message.author.id), 0) + punkte
             await message.channel.send(f"✅ **Richtig!** +{punkte} Punkte wurden gutgeschrieben.")
         else:
@@ -184,7 +243,11 @@ async def on_message(message):
         
         await message.channel.send("🧹 Dieser Kanal wird in 10 Sekunden automatisch gelöscht...")
         await asyncio.sleep(10)
-        await message.channel.delete()
+        
+        try:
+            await message.channel.delete()
+        except:
+            pass
 
         # Ranking-Kanal im Server aktualisieren
         await update_ranking(message.guild)
@@ -204,7 +267,10 @@ async def update_ranking(guild):
                 name = f"Unbekannter User ({user_id})"
             lines.append(f"**{i}. {name}** — {score} Punkte")
         
-        await ranking_channel.purge(limit=5) # Alte Nachrichten löschen
+        try:
+            await ranking_channel.purge(limit=5)
+        except:
+            pass
         await ranking_channel.send("\n".join(lines))
 
 # --- Statistiken & Admin ---
@@ -212,11 +278,17 @@ async def update_ranking(guild):
 @bot.command()
 async def stats(ctx):
     """Zeigt den eigenen Punktestand."""
-    await ctx.message.delete()
+    try:
+        await ctx.message.delete()
+    except:
+        pass
     punkte = user_scores.get(str(ctx.author.id), 0)
     msg = await ctx.send(f"📊 {ctx.author.mention}, du hast aktuell **{punkte} Punkte**.")
     await asyncio.sleep(10)
-    await msg.delete()
+    try:
+        await msg.delete()
+    except:
+        pass
 
 @bot.command()
 @commands.has_permissions(administrator=True)
@@ -230,6 +302,23 @@ async def reset(ctx, member: discord.Member):
         await update_ranking(ctx.guild)
     else:
         await ctx.send(f"ℹ️ {member.mention} hat noch keine Punkte.")
+
+@bot.command()
+async def hilfe(ctx):
+    """Zeigt alle Befehle."""
+    help_text = """**Quiz Bot Befehle:**
+    
+`!start` - Willkommensnachricht
+`!quiz leicht` - Leichte Frage (1 Punkt)
+`!quiz mittel` - Mittlere Frage (2 Punkte)
+`!quiz schwer` - Schwere Frage (3 Punkte)
+`!leicht` / `!mittel` / `!schwer` - Shortcuts
+`!stats` - Deine Punkte anzeigen
+
+**Admin:**
+`!reset @User` - Punkte zurücksetzen
+"""
+    await ctx.send(help_text)
 
 # --- Start ---
 
