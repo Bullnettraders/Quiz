@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.env
+quiz_data.db
+*.db
+.DS_Store
