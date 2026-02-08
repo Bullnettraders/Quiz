@@ -23,7 +23,10 @@ except ImportError as e:
 load_dotenv()
 
 # --- CONFIG ---
-DB_FILE = "quiz_data.db"
+# Railway Volume für persistente Daten (SQLite)
+DATA_DIR = os.getenv("DATA_DIR", "/data")
+os.makedirs(DATA_DIR, exist_ok=True)
+DB_FILE = os.path.join(DATA_DIR, "quiz_data.db")
 QUIZ_CATEGORY_NAME = "📝 QUIZ"
 PVP_CATEGORY_NAME = "⚔️ PVP-QUIZ"
 STUFEN_NAMEN = {1: "Anfänger", 2: "Fortgeschritten", 3: "Profi", 4: "Experte"}
