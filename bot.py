@@ -878,7 +878,7 @@ async def hilfe_cmd(ctx):
     embed.add_field(name="🎮 Solo Quiz", value="`!quiz` — Quiz starten\n`!stats` — Deine Statistiken\n`!ranking` — Ranking anzeigen", inline=False)
     embed.add_field(name="⚔️ PvP Quiz", value="`!pvp @Spieler` — Herausfordern\n`!accept` — Annehmen\n`!decline` — Ablehnen", inline=False)
     embed.add_field(name="ℹ️ Info", value="`!stufen` — Alle Stufen\n`!hilfe` — Diese Übersicht", inline=False)
-    embed.add_field(name="🔑 Admin", value="`!setup_quiz` — Quiz-Info Kanal erstellen\n`!reset_user @User` — User zurücksetzen\n`!set_stufe @User <1-4>` — Stufe setzen", inline=False)
+    embed.add_field(name="ℹ️ Info", value="`!stufen` — Alle Stufen\n`!hilfe` — Diese Übersicht", inline=False)
     embed.add_field(name="📋 Regeln", value=(
         f"• **{FRAGEN_PRO_RUNDE} Fragen** pro Runde, **{ANTWORT_TIMEOUT}s** pro Frage\n"
         "• **10/10** = Aufstieg zur nächsten Stufe\n"
@@ -989,7 +989,6 @@ async def setup_quiz_cmd(ctx):
         ),
         color=0x2b2d31
     )
-    embed1.set_image(url="https://i.imgur.com/8QqK0Yj.png")  # Platzhalter
     await info_channel.send(embed=embed1)
 
     # ─── EMBED 2: WIE FUNKTIONIERT ES? ───
@@ -1128,13 +1127,6 @@ async def setup_quiz_cmd(ctx):
         "!pvp @Spieler  Fordere jemanden heraus\n"
         "!accept        Herausforderung annehmen\n"
         "!decline       Herausforderung ablehnen\n"
-        "```"
-    ), inline=False)
-    embed6.add_field(name="🔑 Admin", value=(
-        "```\n"
-        "!setup_quiz         Quiz-Info Kanal erstellen\n"
-        "!reset_user @User   User komplett zurücksetzen\n"
-        "!set_stufe @User 3  Stufe eines Users setzen\n"
         "```"
     ), inline=False)
     await info_channel.send(embed=embed6)
